@@ -2,8 +2,8 @@
 
 软件位置，不同安装方式可能不同，一般如下：
 
-- docker容器：/usr/sbin/nginx  
-- centos:：/usr/local/nginx/sbin 
+- docker容器：/usr/sbin/nginx
+- centos：/usr/local/nginx/sbin 
 
 配置环境变量即可在任意地方使用nginx命令
 
@@ -14,7 +14,7 @@
 - 启动与关闭
 
   ```shell
-  nginx					 # 启动
+  nginx					   # 启动
   nginx -s reload            # 重新载入配置文件，热部署、热加载
   nginx -s reopen            # 重启 Nginx
   nginx -s stop              # 停止 Nginx
@@ -30,6 +30,20 @@
 
   ```shell
   nginx -v
+  ```
+
+- 第三方模块安装主要命令解释
+
+   查看已经有的模块
+
+  ```shell
+  nginx -V # 大写V
+  ```
+
+  nginx第三方模块安装方法 
+
+  ```shell
+  ./configure --prefix=/你的安装目录  --add-module=/第三方模块目录
   ```
 
 ## Nginx配置文件
@@ -120,7 +134,7 @@ http {
    events 块涉及的指令主要影响Nginx 服务器与用户的网络连接
 
    ```shell
-   worker_connections  1024; #支持的最大连接数
+   worker_connections  1024; #worker进程支持的最大连接数
    ```
 
 3. http块。
@@ -131,7 +145,7 @@ http {
       http {
           include       /etc/nginx/mime.types;#include代表引入一个外部的文件 ->/minle.types中放着大量的媒体类型
       
-          default_type  application/octet-stream;
+          default_type  application/octet-stream; # 默认类型
       
           log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                             '$status $body_bytes_sent "$http_referer" '
@@ -336,7 +350,7 @@ server { # server块
    }
    ```
 
-# Nginx深入
+# Nginx进阶
 
 ## Nginx变量
 
@@ -615,11 +629,16 @@ $uri
 # 请求中的当前URI(不带请求参数，参数位于$args)，可以不同于浏览器传递的$request_uri的值，它可以通过内部重定向，或者使用index指令进行修改，$uri不包含主机名，如”/foo/bar.html”。
 ```
 
+```shell
+$sent_http_location
+# 是请求响应为302时候响应头Location的值
+```
+
 
 
 ## 常见模块
 
-### geo
+### geo模块
 
 根据客户端地址创建新变量，常见写法
 
@@ -650,14 +669,34 @@ location = / {
 
 ### map模块
 
-ngx_http_map_module ；默认编译进Nginx ；通过--without-http_map_module禁用
+- ngx_http_map_module ；默认编译进Nginx ；通过--without-http_map_module禁用；
+- 基于已有变量，使用类似switch{case: ... default: ...}的语法创建新变量，为其他基于变量值实现功能的模块提供更多的可能性。
 
-基于已有变量，使用类似switch{case: ... default: ...}的语法创建新变量，为其他基于变量值实现功能的模块提供更多的可能性。
+简单地说，map 的主要作用是创建自定义变量，通过使用 nginx 的内置变量，去匹配某些特定规则，如果匹配成功则设置某个值给自定义变量。 而这个自定义变量又可以作于他用。
+
+作用域：  http 块
+
+三个参数（指令）：
+
+1. default ： 指定源变量匹配不到任何表达式时将使用的默认值。当没有设置 default，将会用一个空的字符串作为默认的结果。
+2. hostnames ： 允许用前缀或者后缀掩码指定域名作为源变量值。这个参数必须写在值映射列表的最前面。
+3. include ： 包含一个或多个含有映射值的文件。
+
+case规则：
+
+- 字符串严格匹配
+- 使用hostnames指令，可以对域名使用**前缀**泛域名匹配
+- 使用hostnames指令，可以对域名使用**后缀**泛域名匹配
+- ～和～*正则表达式匹配，后者忽略大小写
+
+default规则：
+
+- 没有匹配到任何规则时，使用default，缺失default时，返回空字符串给新变量
 
 ```shell
-# 跟姐主机名称给 $name赋值
+# 根据主机名称（请求的域名）给 $name赋值
 map $http_host $name {
-    hostnames;
+    hostnames; # hostnames指令
     default 0;
     ~map!.taolw+l.org.cn 1;
     *.taohui.org.cn 2;
@@ -674,8 +713,155 @@ server {
 }
 ```
 
-default规则：
-没有匹配到任何规则时，使用default缺失default时，返回空字符串给新变量
+### headers_more模块
+
+ headers_more模块用于 添加、修改或清除 请求/响应头，该模块不是nginx自带的，需要另外安装。openresty默认包含了该模块，可以直接使用。
+
+ headers_more模块主要有4个指令，指令可使用-s选项指定HTTP状态码：
+
+- more_set_headers 用于修改响应头，具有相同名称的响应头总是覆盖 ，因为set的特性，故也可达到添加、清除响应头的作用；
+
+  ```shell
+  # 配置段
+  http, server, location, location if
+  ```
+
+  ```shell
+  # 语法
+  more_set_headers [-t <content-type list>]... [-s <status-code list>]... <new-header>
+  ```
+
+  ```shell
+  location /app {
+  	more_set_headers "Foo: foo"; # 任何请求响应后都设置响应头"Foo: foo"
+  	more_set_headers -s 302 "Foo: foo"; # 响应状态码为302，则设置响应头"Foo: foo"
+  	# 单一指令中，选项可以多次出现
+  	more_set_headers -s 302 -s 301 "Foo: foo"; # 响应状态码为302或301，则设置响应头"Foo: foo"
+  	more_set_headers -s '302 301' "Foo: foo";# 响应状态码为302或301，则设置响应头"Foo: foo"
+  	
+  	# 允许使用Nginx变量
+  	# 提前定义 set  $my_var  “ dog” ;
+      more_set_headers  "服务器：$my_var";
+  }
+  ```
+
+  新的响应体格式可如下：
+
+  - name: vlaue
+  - name:
+  - name
+
+  注意：more_set_headers允许在location的if块中，但不允许在server的if块中。下面的配置就报语法错误
+
+  ```shell
+  # error
+  server { 
+  	if ($args ~ 'download' {
+  		more_set_headers 'Foo: Bar';
+  	}
+  }
+  ```
+
+- more_clear_headers 用于清除响应头；
+
+  ```shell
+  # 配置段
+  http, server, location, location if
+  ```
+
+  ```shell
+  # 语法
+  more_clear_headers [-t <content-type list>]... [-s <status-code list>]... <new-header>...
+  ```
+
+  ```shell
+  location /app {
+  	
+      more_clear_headers -s 404 -t 'text/plain' Foo Baz;# 响应状态码为404，响应类型为text/plain时 移除响应头 "Foo: Baz"
+      more_set_headers -s 404 -t 'text/plain' "Foo:""Baz: "; # 同上
+      more_set_headers -s 404 -t 'text/plain' Foo Baz # 同上
+      # 也可以使用通配符*，如:
+      more_clear_headers 'x-Hidden-*';
+  }
+  ```
+
+- more_set_input_headers 用于修改请求头，因为set的特性，故也可达到添加、清除请求头的作用；
+
+  ```shell
+  # 配置段
+  http, server, location, location if
+  ```
+
+  ```shell
+  # 语法
+  more_set_input_headers [-r] [-t <content-type list>]... <new-header>...
+  ```
+
+  类似于more_set_headers，不同之处在于它对输入标头（或请求标头）进行操作，并且仅支持该-t选项。
+
+  请注意，-t 选项根据请求内容的类型（ Content-Type ）过滤。
+
+- more_clear_input_headers 用于清除请求头
+
+  ```shell
+  # 配置段
+  http, server, location, location if
+  ```
+
+  ```shell
+  # 语法
+  more_clear_input_headers [-t <content-type list>]... <new-header>...
+  ```
+
+  ```shell
+  location /app {
+  	more_clear_input_headers -t 'text/plain' Foo Baz;
+  	more_set_input_headers -t 'text/plain' Foo Baz
+  	more_clear_input_headers "Foo" "Baz";
+  	 # 也可以使用通配符*，如:
+  	more_clear_input_headers 'X-Hidden-*';
+  }
+  ```
+
+###  sub模块
+
+ngx_http_sub_filter_module模块，默认未编译进Nginx ,通过--with-http_sub_module启用；
+
+sub模块用于响应内容的替换，即替换响应中的字符串；指令如下：
+
+1. sub_filter
+
+   匹配文本后替换
+
+2. sub_filter_last_modified
+
+    是否阻止response header中写入Last-Modified，防止缓存，默认是off，即防止缓存 
+
+3. sub_filter_once
+
+    sub_filter指令是执行一次，还是重复执行，默认是只执行一次 ；即替换一次（on），全部替换（off）
+
+4. sub_filter_types 
+
+    指定类型的MINE TYPE才有效 
+
+```shell
+	location / {
+            sub_filter 'aaa'  'bbb';# 忽略大小写，将响应内容内的aaa字符串替换成bbb
+            sub_filter 'name' '$host';# 可使用变量
+            
+            #sub_filter_once on; 
+            sub_filter_once off;# 执行一次与否
+            
+            #sub_filter_last_modified on;
+            sub_filter_last_modified off;# 防止缓存
+            
+            sub_filter_types application/json; # 仅响应类型为 application/json 时进行替换
+            #sub_filter_types *; # 可使用通配符
+    }    
+```
+
+
 
 ## 指令
 
