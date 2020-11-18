@@ -1,9 +1,11 @@
-package com.nginx.nginx;
+package com.nginx.nginx.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author WindShadow
@@ -11,11 +13,28 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping("/nginx")
 public class NginxController {
 
     @Autowired
-    private HttpRequest request;
+    private HttpServletRequest request;
+
+    @RequestMapping("/{path}")
+    public String m0(@PathVariable("path") String path) {
+
+        return path == null ? "path = null" : path;
+    }
+
+    @RequestMapping("/iii/{path}")
+    public String m00(@PathVariable("path") String path) {
+
+        return "iii " + (path == null ? "path = null" : path);
+    }
+
+    @RequestMapping("/iii")
+    public String m000() {
+
+        return "iii - 2";
+    }
 
     @RequestMapping("/index")
     public String m1() {
@@ -23,11 +42,6 @@ public class NginxController {
         return "index";
     }
 
-    @RequestMapping("/aaa")
-    public String m2() {
-
-        return "aaa";
-    }
 
     @RequestMapping("/bbb")
     public String m3() {

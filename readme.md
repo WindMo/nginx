@@ -316,22 +316,37 @@ server { # server块
 
 1. ```shell
    # 1.=匹配
-   location = / {
-   	#精准匹配，主机名后面不能带任何的字符串
+   location = /xxx {
+   	#精准匹配
+   }
+   
+location = /app {      
+   	proxy_pass http://127.0.0.1:8082/demo;
+   	# /app -> http://127.0.0.1:8082/demo;
+   	# /app?name=abc -> http://127.0.0.1:8082/demo?name=abc;
+   	# /app/ -> 匹配不到
+   	# /app+++ -> 匹配不到
    }
    ```
-
+   
 2. ```shell
    # 2．通用匹配
    location /xxx{
    	#匹配所有以/xxx开头的路径
    }
    
+   location /app {      
+	proxy_pass http://127.0.0.1:8082/demo;
+   	# /app?name=ls -> http://127.0.0.1:8082/demo?name=ls
+   	# /app+++ -> http://127.0.0.1:8082/demo+++
+   	# 即拼接操作
+   }
+   
    ```
-
+   
 3. ```shell
    # 3．正则匹配
-   location ~ /xxx {
+   location ~ /xxx { # ~后带空格
    	#匹配所有以/xxx开头的路径
    }
    ```
@@ -339,10 +354,15 @@ server { # server块
 4. ```shell
    # 4．匹配开头路径
    location ^~ /images/ {
-   #匹配所有以/images/开头的路径
+   	#匹配所有以/images/开头的路径
    }
+   location ^~ /static/ {         
+	proxy_pass http://127.0.0.1:8082/demo;
+   	# 
+   }
+   
    ```
-
+   
 5. ```shell
    # 5.匹配后缀
    location ~* \. (gifl jpglpng)$ {
