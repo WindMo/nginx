@@ -121,26 +121,29 @@ http {
 
    文件开始到events块之前的内容，配置影响nginx整体运行的指令；
 
+   如worker_processes是nginx服务器处理并发服务的关键配置，值越大能力越强（还得看硬件配置）；
+
    ```shell
-   worker_processes  1 #可设置值和CPU核心数一致
+   worker_processes;  1 # 可设置值和CPU核心数一致
+   # worker_processes auto; # 可设置为auto
    error_log  /var/log/nginx/error.log warn; # 日志存放位置
    pid        /var/run/nginx.pid;# 进程id，不用管
    ```
-
-   如worker_processes是nginx服务器处理并发服务的关键配置，值越大能力越强（还得看硬件配置）
 
 2. events块
 
    events 块涉及的指令主要影响Nginx 服务器与用户的网络连接
 
    ```shell
-   worker_connections  1024; #worker进程支持的最大连接数
+   worker_connections  1024; # worker进程支持的最大连接数
    ```
 
 3. http块。
 
    1. http全局块（server块之前）
 
+      http 全局块配置的指令包括文件引入、MIME-TYPE定义、日志自定义、连接超时时间、单链接请求数上限等
+      
       ```shell
       http {
           include       /etc/nginx/mime.types;#include代表引入一个外部的文件 ->/minle.types中放着大量的媒体类型
@@ -159,10 +162,8 @@ http {
       	server {} # server块
       	# include /etc/nginx/conf. d/*.conf; -〉引入了conf.d目录下的以.conf为结尾的配置文件
       	include /etc/nginx/conf.d/*.conf;
-      }
+}
       ```
-
-      http 全局块配置的指令包括文件引入、MIME-TYPE定义、日志自定义、连接超时时间、单链接请求数上限等
 
    2. server块（主要关注此处）
 
@@ -190,7 +191,6 @@ http {
       }
       
       ```
-      }
 
 ## 反向代理
 
@@ -201,13 +201,13 @@ server { # server块
         listen       80; #监听端口
         server_name  192.168.100.100;# 域名（一个主机可能有多个域名）
 
-		# 匹配到 /app1 走 http://127.0.0.1:8081
+		# 匹配到 /app1 走 http://200.0.0.1:8081
         location /app1 {	
-        	proxy_pass http://127.0.0.1:8081;
+        	proxy_pass http://200.0.0.1:8081;
         }
-        # 匹配到 /app2 走 http://127.0.0.1:8082
+        # 匹配到 /app2 走 http://200.0.0.1:8082
         location /app2 {	
-        	proxy_pass http://127.0.0.1:8082; 
+        	proxy_pass http://200.0.0.1:8082; 
         }
 }
 ```
@@ -247,7 +247,7 @@ http {
   }
   ```
 
-- IP hash；每个请求按访问ip.的hash结果分配,这样每个访客固定访问一个后端服务器,可以解决session的问题。
+- IP hash；每个请求按访问ip的hash结果分配,这样每个访客固定访问一个后端服务器，可以解决session的问题。
 
   ```shell
   upstream myServer { # 加入 upstream ,服务名 myServer
@@ -262,7 +262,7 @@ http {
   ```shell
   upstream myServer { # 加入 upstream ,服务名 myServer
    	server 192.168.0.100:9001;
-      server 192.168.0.100:9002 ;
+      server 192.168.0.100:9002;
       fair
   }
   ```
@@ -304,29 +304,31 @@ server { # server块
 }
 ```
 
+// todo
 
+### location详解
 
-## location详解
-
-### 匹配类型
+#### 匹配类型
 
 优先级：
 
 (location = ) > (location /xxx/yyy/zzz) > (location ^~) > (location ~，~*) >(location /起始路径) > (location /)
 
 1. ```shell
-   # 1.=匹配
+   # 1.= 匹配
    location = /xxx {
    	#精准匹配
    }
-   
-location = /app {      
-   	proxy_pass http://127.0.0.1:8082/demo;
-   	# /app -> http://127.0.0.1:8082/demo;
-   	# /app?name=abc -> http://127.0.0.1:8082/demo?name=abc;
-   	# /app/ -> 匹配不到
-   	# /app+++ -> 匹配不到
-   }
+   # 例
+   location = /app {      
+      	proxy_pass http://127.0.0.1:8082/demo;
+      	# /app -> http://127.0.0.1:8082/demo
+      	# /app?name=abc -> http://127.0.0.1:8082/demo?name=abc
+      	# /app/userService -> http://127.0.0.1:8082/demo/userService
+      	# /app/ -> 匹配不到
+      	# /app+++ -> 匹配不到
+      	# 精准匹配，但可携带query参数
+    }
    ```
    
 2. ```shell
@@ -334,20 +336,33 @@ location = /app {
    location /xxx{
    	#匹配所有以/xxx开头的路径
    }
-   
+   # 例
    location /app {      
-	proxy_pass http://127.0.0.1:8082/demo;
+   proxy_pass http://127.0.0.1:8082/demo;
    	# /app?name=ls -> http://127.0.0.1:8082/demo?name=ls
+   	# /app/ -> http://127.0.0.1:8082/demo/
    	# /app+++ -> http://127.0.0.1:8082/demo+++
    	# 即拼接操作
    }
-   
    ```
-   
+
 3. ```shell
    # 3．正则匹配
-   location ~ /xxx { # ~后带空格
-   	#匹配所有以/xxx开头的路径
+   location ~ xxx { 
+   	# xxx是一个正则表达式
+   	# ~符告诉nginx：xxx是一个正则表达式不是一个普通的字符串
+   }
+   # 例
+    server {
+      listen       80;
+      server_name  127.0.0.1;
+      location ~ (/ggg){
+       	# 匹配包含 /ggg 字符串的url， 匹配到的值为 /ggg 
+       	# 第一个匹配到的值为$1，值即为 /ggg 
+           # 代理到 http://127.0.0.1:8082/demo/ggg
+      		proxy_pass http://127.0.0.1:8082/demo$1;
+      }
+      # 即 $后的数字表示正则匹配到的内容的索引，从1开始，且代理地址proxy_pass必须使用其中之一
    }
    ```
 
@@ -356,13 +371,15 @@ location = /app {
    location ^~ /images/ {
    	#匹配所有以/images/开头的路径
    }
+   # 例
    location ^~ /static/ {         
-	proxy_pass http://127.0.0.1:8082/demo;
-   	# 
+   proxy_pass http://127.0.0.1:8082/demo;
+   	# /static/aaa -> http://127.0.0.1:8082/demo/aaa
+   	# 即拼接操作
    }
    
    ```
-   
+
 5. ```shell
    # 5.匹配后缀
    location ~* \. (gifl jpglpng)$ {
@@ -713,7 +730,12 @@ default规则：
 
 - 没有匹配到任何规则时，使用default，缺失default时，返回空字符串给新变量
 
+map_hash_bucket_size size;指令：
+
+- 指定一个映射表中的变量在哈希表中的最大值，这个值取决于处理器的缓存。 
+
 ```shell
+map_hash_bucket_size 128; # 变量过长时配置文件加载报错，此处设置为128
 # 根据主机名称（请求的域名）给 $name赋值
 map $http_host $name {
     hostnames; # hostnames指令
@@ -731,6 +753,23 @@ server {
         return 200 '$name:aaa'; 
     }
 }
+```
+
+实用操作之一，重定向处理
+
+```shell
+ map $sent_http_location $location{ # 根据重定向location响应头$sent_http_location给变量$location赋值
+
+    ~/app([\S]+$) http://210.0.0.1:9000/outerApp$1; 
+}
+	
+ location /outerApp { # 访问 /outerApp （外网地址），代理到内网地址（/innerApp）
+ 	proxy_pass http://192.168.100.100/innerApp;
+ 	# 若后端服务（/innerApp所在服务）响应为302，则替换其location响应头，为对应外网地址，使客户端下次请求不会404
+ 	# more_set_headers指令见headers_more模块
+ 	more_set_headers -s '302' "Location: $location"; 
+ }
+
 ```
 
 ### headers_more模块

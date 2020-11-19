@@ -22,7 +22,14 @@ public class MyHandlerInterceptor implements HandlerInterceptor {
         log.info("URL: {}",request.getRequestURL());
         log.info("URI: {}",request.getRequestURI());
         request.getParameterMap().forEach((k,v) -> log.info("param: k = {}, v = {}",k,v));
-        log.info("===================================");
+
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+
+        log.info("响应Location: {}",response.getHeader("Location"));
+        log.info("===================================");
     }
 }

@@ -22,4 +22,10 @@ public class Conk {
 
         return "redirect:/iii";
     }
+
+    @RequestMapping("/p")
+    public String ms21() {
+
+        return "redirect:http://127.0.0.2:8082/demo/iii";
+    }
 }
