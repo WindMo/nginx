@@ -18,11 +18,24 @@ public class NginxController {
     @Autowired
     private HttpServletRequest request;
 
-    @RequestMapping("/{path}")
-    public String m0(@PathVariable("path") String path) {
+//    @RequestMapping("/{path}")
+//    public String m0(@PathVariable("path") String path) {
+//
+//        return path == null ? "path = null" : path;
+//    }
 
-        return path == null ? "path = null" : path;
+//    @RequestMapping("/")
+    public String m0001() {
+
+        return "is /";
     }
+
+    @RequestMapping("")
+    public String m0000() {
+
+        return "is empty";
+    }
+
 
     @RequestMapping("/iii/{path}")
     public String m00(@PathVariable("path") String path) {
@@ -31,9 +44,9 @@ public class NginxController {
     }
 
     @RequestMapping("/iii")
-    public String m000() {
+    public String m000(String name) {
 
-        return "iii - 2";
+        return "iii - 2" + name;
     }
 
     @RequestMapping("/index")
