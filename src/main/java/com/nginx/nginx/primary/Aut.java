@@ -13,7 +13,7 @@ import javax.annotation.Resource;
  * @since
  */
 @Slf4j
-@Service
+//@Service
 public class Aut {
 
 //    @Autowired

@@ -1,11 +1,16 @@
 package com.nginx.nginx.web;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author WindShadow
@@ -44,8 +49,10 @@ public class NginxController {
     }
 
     @RequestMapping("/iii")
-    public String m000(String name) {
+    public String m000(String name, HttpServletResponse response) {
 
+//        response.setHeader("hhh",null);
+        response.setHeader("hhh2","");
         return "iii - 2" + name;
     }
 
@@ -90,5 +97,45 @@ public class NginxController {
     public String png() {
 
         return "png";
+    }
+
+//    @RequestMapping(value = "/rest")
+//    public Map<String,String> rest() {
+//
+//        Map<String,String> map = Collections.singletonMap("url","http://127.0.0.1:8080/index");
+//        return map;
+//    }
+
+    @RequestMapping(value = "/rest")
+    public String rest(String callback) {
+
+        Map<String,String> map = Collections.singletonMap("url","http://127.0.0.1:8080/index");
+
+        return callback + "("+ JSON.toJSONString(map) + ")";
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public static void main(String[] args) {
+
+        String callback = "callback";
+        Map<String,String> map = Collections.singletonMap("url","http://127.0.0.1:8080/index");
+
+        System.out.println(callback + "("+ JSON.toJSONString(map) + ")");
     }
 }

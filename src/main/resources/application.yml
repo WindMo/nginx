@@ -1,0 +1,12 @@
+server:
+  ssl:
+    enabled: true
+    key-store: classpath:ssl/ws-ssl-server.jks
+    key-store-type: JKS
+    key-store-password: 123456server
+    key-alias: ws-ssl-server
+    trust-store: classpath:ssl/ws-ssl-server.jks
+    trust-store-type: JKS
+    trust-store-password: 123456server
+    trust-store-provider: SUN
+    client-auth: none

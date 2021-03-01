@@ -1,11 +1,125 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>js-redirect</title>
+
 </head>
+
 <body>
-    <h1>js-redirect</h1>
-    <a href="">跳转</a>
+
+<!--<a href="/demo/download"/>-->
+<!--<button onclick="windowHref()">windowHref</button>-->
+<!--<button onclick="open()">open</button>-->
+<!--<button onclick="jq()">jq</button>-->
+<!--<button onclick="ajax1()">ajax</button>-->
+<!--<button onclick="ajax22()">ajax2222</button>-->
+<button onclick="ajaxF()">ajaxFFF</button>
+<div>
+    <form>
+    </form>
+</div>
 </body>
+<script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script>
+
+<script>
+    function ajaxF(){
+
+        $('form').ajaxSubmit({
+            type: 'post', // 提交方式 get/post
+            url: '/demo/iii', // 需要提交的 url
+            data: {
+                'title': "ttt"
+            },
+            headers: {
+                    AuthCode: "123456789"
+                },
+            success: function(data) { // data 保存提交后返回的数据，一般为 json 数据
+                // 此处可对 data 作相关处理
+                console.log('提交成功！');
+            }
+        });
+    }
+</script>
+
+
+<script >
+/*
+    $.ajaxSettings.beforeSend = function (xhr,request) {
+
+        xhr.setRequestHeader("xhrhhh","zhrxhe");
+    };
+    $.ajaxSettings.complete = function( xhr,data ){
+
+        console.log(" complete ok");
+        console.log(xhr.getAllResponseHeaders());
+        console.log(xhr.getResponseHeader("connection"))
+    };
+
+    function windowHref() {
+
+        window.location.href = "/demo/download";
+    }
+
+    function jq() {
+
+        $("body").append("<a href='/demo/download'/>");
+        $("a[href='/demo/download']").click();
+        $("a[href='/demo/download']").remove();
+    }
+    function open() {
+
+        window.open("/demo/download","下载");
+    }
+    function ajax1() {
+
+        $.ajax({
+            // async: false,
+            type: "get",
+            url: "/demo/download",
+        }).then(function (res) {
+            var data = res.data;
+            console.log(JSON.stringify(res));
+            if (res.type == "application/x-msdownload") {
+                const blob = new Blob([res.data],{type: type});
+                const url = window. URL.createObjectURL(blob);
+
+                //
+                // var a = document.createElement("a");
+                //
+                // a.download = fileName;
+                //
+                // a.href = window.URL.createObjectURL(data);
+                //
+                // a.click();
+                // window.location.href = window.URL.createObjectURL(data);
+                window.location.href = url;
+            }
+        });
+
+
+
+    }
+    function ajax22() {
+
+        $.ajax({
+            // async: false,
+            type: "post",
+            url: "/demo/iii"
+            // complete: function( xhr,data ){
+            //
+            //     console.log(xhr.getAllResponseHeaders());
+            //     console.log(xhr.getResponseHeader("connection"))
+            // }
+        }).then(function () {
+
+
+                console.log("ok");
+
+        });
+
+    }
+*/
+</script>
 </html>
